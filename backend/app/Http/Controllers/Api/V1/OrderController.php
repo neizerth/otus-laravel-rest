@@ -13,8 +13,12 @@ class OrderController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
+        $userId = auth()->id();
         $orders = Order::query()
-            ->where('client_id', auth()->id())
+            ->where(function ($query) use ($userId): void {
+                $query->where('client_id', $userId)
+                    ->orWhereHas('service', fn ($q) => $q->where('user_id', $userId));
+            })
             ->with(['service', 'client'])
             ->latest()
             ->paginate(15);
@@ -42,6 +46,18 @@ class OrderController extends Controller
             abort(403, 'Forbidden');
         }
 
+        $order->load(['service', 'client']);
+
+        return new OrderResource($order);
+    }
+
+    public function complete(Order $order): OrderResource
+    {
+        if ($order->client_id !== auth()->id()) {
+            abort(403, 'Только заказчик может отметить заказ как выполненный.');
+        }
+
+        $order->update(['status' => Order::STATUS_COMPLETED]);
         $order->load(['service', 'client']);
 
         return new OrderResource($order);

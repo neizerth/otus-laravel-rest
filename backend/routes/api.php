@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('throttle:60,1')->group(function (): void {
     // Auth: rate limit strict for login/register
-    Route::middleware('throttle:5,1')->group(function (): void {
+    Route::middleware('throttle:10,1')->group(function (): void {
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
     });
@@ -20,5 +20,6 @@ Route::prefix('v1')->middleware('throttle:60,1')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::apiResource('services', ServiceController::class)->except(['index', 'show']);
         Route::apiResource('orders', OrderController::class)->only(['index', 'store', 'show']);
+        Route::post('orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
     });
 });

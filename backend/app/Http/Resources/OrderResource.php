@@ -19,11 +19,14 @@ class OrderResource extends JsonResource
             'status' => $this->status,
             'event_date' => $this->event_date?->format('Y-m-d'),
             'service' => new ServiceResource($this->whenLoaded('service')),
-            'client' => $this->when($request->user()?->id === $this->client_id, fn () => [
-                'id' => $this->client->id,
-                'name' => $this->client->name,
-                'email' => $this->client->email,
-            ]),
+            'client' => $this->when(
+                $this->relationLoaded('client') && ($request->user()?->id === $this->client_id || $request->user()?->id === $this->service?->user_id),
+                fn () => [
+                    'id' => $this->client->id,
+                    'name' => $this->client->name,
+                    'email' => $this->client->email,
+                ]
+            ),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

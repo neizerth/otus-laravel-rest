@@ -16,6 +16,7 @@ class ServiceController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Service::query()
+            ->when($request->boolean('mine') && $request->user(), fn ($q) => $q->where('user_id', $request->user()->id))
             ->when($request->filled('category'), fn ($q) => $q->where('category', $request->category))
             ->when($request->filled('price_min'), fn ($q) => $q->where('price', '>=', $request->price_min))
             ->when($request->filled('price_max'), fn ($q) => $q->where('price', '<=', $request->price_max))
